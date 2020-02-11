@@ -8,7 +8,7 @@ public:
     {
         int l=0;
         int r=nums.size()-1;
-        while(l<r)
+        while(l<r) //
         {
             int mid = (r+l)/2;
             if(nums[mid]<target)
