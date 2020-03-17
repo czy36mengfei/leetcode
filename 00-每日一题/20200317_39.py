@@ -31,6 +31,7 @@ class Solution(object):
 
 
 
+
 if __name__ == '__main__':
     obj = Solution()
     while True:
