@@ -1,84 +1,64 @@
-class Solution {
-public:
-    vector<vector<int>> res;
-    vector<vector<int>> pacificAtlantic(vector<vector<int>>& matrix) {
-        int m = matrix.size();
-        if(m==0) return res;
-        int n = matrix[0].size();
-        vector<vector<int>> visited = vector<vector<int>>(m,vector<int>(n,0));
-        vector<vector<int>> p= vector<vector<int>>(m,vector<int>(n,0));
-        vector<vector<int>> a= vector<vector<int>>(m,vector<int>(n,0));
-        for(int j=0;j<n;j++)
-        {
-            helper_p(matrix,visited,m,n,0,j,p);
-        }
-        for(int i=0;i<m;i++)
-        {
-            helper_p(matrix,visited,m,n,i,0,p);
-        }
-        visited = vector<vector<int>>(m,vector<int>(n,0));
-        for(int j=0;j<n;j++)
-        {
-            helper_a(matrix,visited,m,n,m-1,j,a);
-        }
-        for(int i=0;i<m;i++)
-        {
-            helper_a(matrix,visited,m,n,i,n-1,a);
-        }
-        for(int i=0;i<m;i++)
-        {
-            for(int j=0;j<n;j++)
-            {
-                if(p[i][j]==1 && a[i][j]==1)
-                {
-                    vector<int> temp = {i,j};
-                    res.push_back(temp);
-                }
-            }
-        }
-        return  res;
-    }
-    void helper_p(vector<vector<int>>& matrix,vector<vector<int>>& visited,int& m,int& n,int i,int j,vector<vector<int>>& p)
-    {
-        if(visited[i][j]==1) // 之前访问过 无需重复计算
-        {
-            return;
-        }
-        visited[i][j] = 1;
-        p[i][j]=1;
-        // 上
-        if(i>0 && matrix[i-1][j]>=matrix[i][j] && visited[i-1][j]!=-2)
-            helper_p(matrix, visited, m, n, i - 1, j,p);
-        // 下
-        if(i<m-1 && matrix[i+1][j]>=matrix[i][j] && visited[i+1][j]!=-2)
-            helper_p(matrix,visited,m,n,i+1,j,p);
-        // 左
-        if(j>0 && matrix[i][j-1]>=matrix[i][j] && visited[i][j-1]!=-2)
-            helper_p(matrix,visited,m,n,i,j-1,p);
-        // 右
-        if(j<n-1 && matrix[i][j+1]>=matrix[i][j] && visited[i][j+1]!=-2)
-            helper_p(matrix,visited,m,n,i,j+1,p);
-    }
-    void helper_a(vector<vector<int>>& matrix,vector<vector<int>>& visited,int& m,int& n,int i,int j,vector<vector<int>>& a)
-    {
-        if(visited[i][j]==1) // 之前访问过 无需重复计算
-        {
-            return;
-        }
-        visited[i][j] = 1;
-        a[i][j]=1;
-        // 上
-        if(i>0 && matrix[i-1][j]>=matrix[i][j] && visited[i-1][j]!=-2)
-            helper_a(matrix, visited, m, n, i - 1, j,a);
-        // 下
-        if(i<m-1 && matrix[i+1][j]>=matrix[i][j] && visited[i+1][j]!=-2)
-            helper_a(matrix,visited,m,n,i+1,j,a);
-        // 左
-        if(j>0 && matrix[i][j-1]>=matrix[i][j] && visited[i][j-1]!=-2)
-            helper_a(matrix,visited,m,n,i,j-1,a);
-        // 右
-        if(j<n-1 && matrix[i][j+1]>=matrix[i][j] && visited[i][j+1]!=-2)
-            helper_a(matrix,visited,m,n,i,j+1,a);
-    }
-};
+
+# 太平洋大西洋水流问题
+class Solution(object):
+    direction = [(-1,0), (1,0), (0,-1), (0,1)]
+    pacific = None
+    atlantic = None
+    def pacificAtlantic(self, matrix):
+        """
+        :type matrix: List[List[int]]
+        :rtype: List[List[int]]
+        """
+        n_row = len(matrix)
+        if n_row == 0:
+            return []
+        n_col = len(matrix[0])
+        self.pacific = [[False for _ in range(n_col)] for _ in range(n_row)]
+        self.atlantic = [[False for _ in range(n_col)] for _ in range(n_row)]
+
+        visited = [[False for _ in range(n_col)] for _ in range(n_row)]
+        # 太平洋倒流
+        for x in range(n_col):
+            if visited[0][x] is False:
+                self._dfs(matrix, x, 0, visited, n_row, n_col, is_pacific=True)
+
+        for y in range(n_row):
+            if visited[y][0] is False:
+                self._dfs(matrix, 0, y, visited, n_row, n_col, is_pacific=True)
+
+        visited = [[False for _ in range(n_col)] for _ in range(n_row)]
+        # 大西洋倒流
+        for x in range(n_col):
+            if visited[n_row-1][x] is False:
+                self._dfs(matrix, x, n_row-1, visited, n_row, n_col, is_pacific=False)
+
+        for y in range(n_row):
+            if visited[y][n_col-1] is False:
+                self._dfs(matrix, n_col-1, y, visited, n_row, n_col, is_pacific=False)
+
+        # 找出交汇点
+        res = []
+        for y in range(n_row):
+            for x in range(n_col):
+                if self.pacific[y][x] is True and self.atlantic[y][x] is True:
+                    res.append([y, x])
+        return res
+
+
+
+    def _dfs(self, matrix, x, y, visited, n_row, n_col, is_pacific):
+        # 倒流情况
+        if is_pacific:
+            self.pacific[y][x] = True
+        else:
+            self.atlantic[y][x] = True
+        visited[y][x] = True
+        # 二维回溯
+        for d in self.direction:
+            new_x = x + d[0]
+            new_y = y + d[1]
+            if 0 <= new_x < n_col and 0 <= new_y < n_row and \
+                matrix[new_y][new_x] >= matrix[y][x] and visited[new_y][new_x] is False:
+                self._dfs(matrix, new_x, new_y, visited, n_row, n_col, is_pacific)
+
 
